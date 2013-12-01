@@ -1,0 +1,163 @@
+comment: openfoam dictionary tmLanguage
+fileTypes: [thermodynamicsDictionary]
+firstLineMatch: -\*- OpenFOAM\+\+ -\*-
+foldingStartMarker: !!regex |
+    (?x)
+             /\*\*(?!\*)
+            |^(?![^{]*?//|[^{]*?/\*(?!.*?\*/.*?\{)).*?\{\s*($|//|/\*(?!.*?\*/.*\S))
+foldingStopMarker: !!regex (?<!\*)\*\*/|^\s*\}
+keyEquivalent: ^~O
+name: OpenFOAM
+
+patterns:
+- include: '#comments'
+
+     ########     ###     ######  ####  ######
+     ##     ##   ## ##   ##    ##  ##  ##    ##
+     ##     ##  ##   ##  ##        ##  ##
+     ########  ##     ##  ######   ##  ##
+     ##     ## #########       ##  ##  ##
+     ##     ## ##     ## ##    ##  ##  ##    ##
+     ########  ##     ##  ######  ####  ######
+
+  # raw string literal
+- begin: !!regex R\"([a-zA-Z_]\w*)?\(
+  beginCaptures:
+      '0': {name: punctuation.definition.string.begin.raw.openfoam}
+  end: !!regex \)\1?\"
+  endCaptures:
+      '0': {name: punctuation.definition.string.end.raw.openfoam}
+  name: string.quoted.raw.openfoam
+
+  # simple keywords and type names etc
+- match: !!regex \b(break|case|continue|default|do|else|for|goto|if|_Pragma|return|switch|while)\b
+  name: keyword.control.openfoam
+- match: !!regex \b(true|false)\b
+  name: constant.language.openfoam}
+
+     ##       #### ######## ######## ########     ###    ##        ######
+     ##        ##     ##    ##       ##     ##   ## ##   ##       ##    ##
+     ##        ##     ##    ##       ##     ##  ##   ##  ##       ##
+     ##        ##     ##    ######   ########  ##     ## ##        ######
+     ##        ##     ##    ##       ##   ##   ######### ##             ##
+     ##        ##     ##    ##       ##    ##  ##     ## ##       ##    ##
+     ######## ####    ##    ######## ##     ## ##     ## ########  ######
+
+  # numeric
+- match: !!regex
+        '\b((0(x|X)[0-9a-fA-F]*)|(([0-9]+\.?[0-9]*)|(\.[0-9]+))((e|E)(\+|-)?[0-9]+)?)(L|l|UL|ul|u|U|F|f|ll|LL|ull|ULL)?\b'
+  name: constant.numeric.openfoam}
+  # string literal with double quotes
+- match: !!regex ^\s+(\w+)\s+([\w."-]+);\s*\n
+  captures:
+      '0': {name: keyword.control.openfoam}
+      '1': {name: constant.numeric.openfoam}
+  name: meta.option.openfoam
+
+- begin: '"'
+  beginCaptures:
+      '0': {name: punctuation.definition.string.begin.openfoam}
+  end: '"'
+  endCaptures:
+      '0': {name: punctuation.definition.string.end.openfoam}
+  name: string.quoted.double.openfoam
+  # string literal with single quotes
+- begin: ''''
+  beginCaptures:
+      '0': {name: punctuation.definition.string.begin.openfoam}
+  end: ''''
+  endCaptures:
+      '0': {name: punctuation.definition.string.end.openfoam}
+  name: string.quoted.single.openfoam
+
+
+    ######## ##     ## ##    ##  ######  ######## ####  #######  ##    ##  ######
+    ##       ##     ## ###   ## ##    ##    ##     ##  ##     ## ###   ## ##    ##
+    ##       ##     ## ####  ## ##          ##     ##  ##     ## ####  ## ##
+    ######   ##     ## ## ## ## ##          ##     ##  ##     ## ## ## ##  ######
+    ##       ##     ## ##  #### ##          ##     ##  ##     ## ##  ####       ##
+    ##       ##     ## ##   ### ##    ##    ##     ##  ##     ## ##   ### ##    ##
+    ##        #######  ##    ##  ######     ##    ####  #######  ##    ##  ######
+
+  # subdict
+- begin: !!regex (?x) ^(\w+)\s*
+  beginCaptures:
+      '1': {name: entity.name.function.openfoam}
+  end: !!regex (?<=\}|\);)
+  name: meta.function.openfoam
+  patterns:
+  - {include: '#comments'}
+  - {include: '#parens'}
+  - {include: '#block'}
+
+
+
+
+
+
+
+########  ######## ########   #######   ######  #### ########  #######  ########  ##    ##
+##     ## ##       ##     ## ##     ## ##    ##  ##     ##    ##     ## ##     ##  ##  ##
+##     ## ##       ##     ## ##     ## ##        ##     ##    ##     ## ##     ##   ####
+########  ######   ########  ##     ##  ######   ##     ##    ##     ## ########     ##
+##   ##   ##       ##        ##     ##       ##  ##     ##    ##     ## ##   ##      ##
+##    ##  ##       ##        ##     ## ##    ##  ##     ##    ##     ## ##    ##     ##
+##     ## ######## ##         #######   ######  ####    ##     #######  ##     ##    ##
+
+# rules which are referenced elsewhere in the grammar
+repository:
+    block:
+        begin: \{
+        end: \}
+        name: meta.block.openfoam
+        patterns:
+        - {include: '#block_innards'}
+    block_innards:
+        patterns:
+        -   captures:
+                '1': {name: punctuation.whitespace.function-call.leading.openfoam}
+                '2': {name: entity.name.function.openfoam}
+                '3': {name: punctuation.definition.parameters.openfoam}
+            match: !!regex |-
+                (?x) (?: (?= \s )  (?:(?<=else|new|return) | (?<!\w)) (\s+))?
+                            (\b
+                                (?!(while|for|do|if|else|switch|catch|enumerate|return|r?iterate|sizeof|alignof)\s*\()(?:(?!NS)[A-Za-z_]\w*+\b | :: )++                  # actual name
+                            )
+                             \s*(\()
+            name: meta.function-call.openfoam
+        - {include: '#block'}
+        - {include: $base}
+    comments:
+        patterns:
+        -   captures:
+                '1': {name: meta.toc-list.banner.line.openfoam}
+            match: !!regex ^// =(\s*.*?)\s*=\s*$\n?
+            name: comment.line.banner.openfoam
+        -   begin: //
+            beginCaptures:
+                '0': {name: punctuation.definition.comment.openfoam}
+            end: $\n?
+            name: comment.line.double-slash.openfoam
+            patterns:
+            - {match: !!regex '(?>\\\s*\n)', name: punctuation.separator.continuation.openfoam}
+        -   begin: !!regex /\*
+            captures:
+                '0': {name: punctuation.definition.comment.openfoam}
+            end: \*/
+            name: comment.block.openfoam
+        - {match: !!regex \*/.*\n, name: invalid.illegal.stray-comment-end.openfoam}
+
+    parens:
+        begin: !!regex \(
+        end: \)
+        name: meta.parens.openfoam
+        patterns:
+        - {include: $base}
+
+
+
+
+
+
+scopeName: source.openfoam
+uuid: 79b1c6b4-7550-4cf2-b52c-8658ca4031bb
